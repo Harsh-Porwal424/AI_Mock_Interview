@@ -26,7 +26,7 @@ const page = () => {
             <h1 className="text-3xl font-bold text-primary">AI Mock Interview</h1>
             <nav className="mt-4 md:mt-0 flex items-center">
               <div  >
-                <a target='_blanck' href={"https://github.com/modamaan/Ai-mock-Interview"} ><FaGithub className="w-10 h-8"  /></a>
+                <a target='_blanck' href={"https://github.com/ANISHkumarSINHA/AI_Mocker"} ><FaGithub className="w-10 h-8"  /></a>
               </div>
               <div><a href="#features" className="text-lg text-gray-800 mx-2 md:mx-4">Features</a>
                 <a href="#testimonials" className="text-lg text-gray-800 mx-2 md:mx-4">Testimonials</a>
