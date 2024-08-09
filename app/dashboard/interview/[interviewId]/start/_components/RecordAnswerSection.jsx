@@ -1,16 +1,17 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Webcam from "react-webcam";
 import useSpeechToText from "react-hook-speech-to-text";
-import { Mic, StopCircle } from "lucide-react";
+import { Mic } from "lucide-react";
 import { toast } from "sonner";
 import { chatSession } from "@/utils/GeminiAIModal";
 import { db } from "@/utils/db";
 import { UserAnswer } from "@/utils/schema";
 import { useUser } from "@clerk/nextjs";
 import moment from "moment";
+import { WebCamContext } from "@/app/dashboard/layout";
 
 const RecordAnswerSection = ({
   mockInterviewQuestion,
@@ -32,6 +33,8 @@ const RecordAnswerSection = ({
     continuous: true,
     useLegacyResults: false,
   });
+  const { webCamEnabled, setWebCamEnabled } = useContext(WebCamContext);
+
   useEffect(() => {
     results.map((result) =>
       setUserAnswer((prevAns) => prevAns + result?.transcript)
@@ -39,110 +42,113 @@ const RecordAnswerSection = ({
   }, [results]);
 
   useEffect(() => {
-    if (!isRecording && userAnswer.length > 5) {
-      UpdateUserAnswer();
+    if (!isRecording && userAnswer.length > 10) {
+      updateUserAnswer();
     }
+    // if (userAnswer?.length < 10) {
+    //   setLoading(false);
+    //   toast("Error while saving your answer, Please record again");
+    //   return;
+    // }
   }, [userAnswer]);
 
   const StartStopRecording = async () => {
     if (isRecording) {
       stopSpeechToText();
-      // if (userAnswer?.length < 5) {
-      //   setLoading(false)
-      //   toast("Error while saving your answer,please record again");
-      //   return;
-      // }
     } else {
       startSpeechToText();
     }
   };
 
-  const UpdateUserAnswer = async () => {
-    console.log(userAnswer, "########");
-    setLoading(true);
-    const feedbackPrompt =
-      "Question:" +
-      mockInterviewQuestion[activeQuestionIndex]?.question +
-      ", User Answer:" +
-      userAnswer +
-      ",Depends on question and user answer for given interview question " +
-      " please give use rating for answer and feedback as area of improvement if any" +
-      " in just 3 to 5 lines to improve it in JSON format with rating field and feedback field";
-    console.log(
-      "🚀 ~ file: RecordAnswerSection.jsx:38 ~ SaveUserAnswer ~ feedbackPrompt:",
-      feedbackPrompt
-    );
-    const result = await chatSession.sendMessage(feedbackPrompt);
-    console.log(
-      "🚀 ~ file: RecordAnswerSection.jsx:46 ~ SaveUserAnswer ~ result:",
-      result
-    );
-    const mockJsonResp = result.response
-      .text()
-      .replace("```json", "")
-      .replace("```", "");
+  const updateUserAnswer = async () => {
+    try {
+      console.log(userAnswer);
+      setLoading(true);
+      const feedbackPrompt =
+        "Question:" +
+        mockInterviewQuestion[activeQuestionIndex]?.Question +
+        ", User Answer:" +
+        userAnswer +
+        " , Depends on question and user answer for given interview question" +
+        " please give us rating for answer and feedback as area of improvement if any " +
+        "in just 3 to 5 lines to improve it in JSON format with rating field and feedback field";
 
-    console.log(
-      "🚀 ~ file: RecordAnswerSection.jsx:47 ~ SaveUserAnswer ~ mockJsonResp:",
-      mockJsonResp
-    );
-    const JsonfeedbackResp = JSON.parse(mockJsonResp);
-    const resp = await db.insert(UserAnswer).values({
-      mockIdRef: interviewData?.mockId,
-      question: mockInterviewQuestion[activeQuestionIndex]?.question,
-      correctAns: mockInterviewQuestion[activeQuestionIndex]?.answer,
-      userAns: userAnswer,
-      feedback: JsonfeedbackResp?.feedback,
-      rating: JsonfeedbackResp?.rating,
-      userEmail: user?.primaryEmailAddress?.emailAddress,
-      createdAt: moment().format("DD-MM-YYYY"),
-    });
+      const result = await chatSession.sendMessage(feedbackPrompt);
 
-    if (resp) {
-      toast("User Answer recorded successfully");
+      let MockJsonResp = result.response.text();
+      console.log(MockJsonResp);
+
+      // Removing possible extra text around JSON
+      MockJsonResp = MockJsonResp.replace("```json", "").replace("```", "");
+
+      // Attempt to parse JSON
+      let jsonFeedbackResp;
+      try {
+        jsonFeedbackResp = JSON.parse(MockJsonResp);
+      } catch (e) {
+        throw new Error("Invalid JSON response: " + MockJsonResp);
+      }
+
+      const resp = await db.insert(UserAnswer).values({
+        mockIdRef: interviewData?.mockId,
+        question: mockInterviewQuestion[activeQuestionIndex]?.Question,
+        correctAns: mockInterviewQuestion[activeQuestionIndex]?.Answer,
+        userAns: userAnswer,
+        feedback: jsonFeedbackResp?.feedback,
+        rating: jsonFeedbackResp?.rating,
+        userEmail: user?.primaryEmailAddress?.emailAddress,
+        createdAt: moment().format("YYYY-MM-DD"),
+      });
+
+      if (resp) {
+        toast("User Answer recorded successfully");
+      }
       setUserAnswer("");
       setResults([]);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      toast("An error occurred while recording the user answer");
+      setLoading(false);
     }
-    setResults([]);
-    setLoading(false);
   };
 
-  if (error) return <p>Web Speech API is not available in this browser 🤷‍</p>;
   return (
-    <div className="flex justify-cente items-center flex-col">
-      <div className="flex flex-col my-20 justify-center items-center bg-black rounded-lg p-5">
-        <Image
-          src={"/webcam.png"}
-          width={200}
-          height={200}
-          className="absolute"
-          alt="webcam"
-          priority
-        />
-         <Webcam
-          style={{ height: 300, width: "100%", zIndex: 10 }}
-          mirrored={true}
-        /> 
-      </div>
-      <Button
-        disabled={loading}
-        variant="outline"
-        className="my-10"
-        onClick={StartStopRecording}
-      >
-        {isRecording ? (
-          <h2 className="text-red-600 animate-pulse flex gap-2 items-center">
-            <StopCircle /> Stop Recording...
-          </h2>
+    <div className="flex flex-col items-center justify-center overflow-hidden">
+      <div className="flex flex-col justify-center items-center rounded-lg p-5 bg-black mt-4 w-[30rem] ">
+        {webCamEnabled ? (
+          <Webcam
+            mirrored={true}
+            style={{ height: 250, width: "100%", zIndex: 10 }}
+          />
         ) : (
-          <h2 className="text-primary flex gap-2 items-center">
-            <Mic /> Record Answer
-          </h2>
+          <Image src={"/camera.jpg"} width={200} height={200} />
         )}
-      </Button>
-      {/* <Button onClick={() => console.log("------", userAnswer)}>
-        Show User Answer
-      </Button> */}
+      </div>
+      <div className="md:flex  mt-4 md:mt-8 md:gap-5">
+        <div className="my-4 md:my-0">
+          <Button
+            // className={`${webCamEnabled ? "w-full" : "w-full"}`}
+            onClick={() => setWebCamEnabled((prev) => !prev)}
+          >
+            {webCamEnabled ? "Close WebCam" : "Enable WebCam"}
+          </Button>
+        </div>
+        <Button
+          varient="outline"
+          // className="my-10"
+          onClick={StartStopRecording}
+          disabled={loading}
+        >
+          {isRecording ? (
+            <h2 className="text-red-400 flex gap-2 ">
+              <Mic /> Stop Recording...
+            </h2>
+          ) : (
+            " Record Answer"
+          )}
+        </Button>
+      </div>
     </div>
   );
 };
