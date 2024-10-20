@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Button } from "@/components/ui/button"
 import Head from 'next/head'
 import Link from 'next/link'
-import { FaGithub } from "react-icons/fa"
+import { FaGithub, FaBars, FaTimes } from "react-icons/fa"
 import { motion } from "framer-motion"
 import Image from 'next/image'; // Import Next.js Image component
 
@@ -92,6 +92,7 @@ const NavLink = ({ href, children }) => {
 
 const Page = () => {
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -101,7 +102,12 @@ const Page = () => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen)
+  }
+
   return (
+    
     <div className="bg-gradient-to-b from-gray-900 to-gray-800 text-white">
       <Head>
         <title>AI Interview Trainer</title>
@@ -111,8 +117,8 @@ const Page = () => {
 
       <header className={`fixed w-full py-4 transition-all duration-300 z-10 ${isScrolled ? 'bg-gray-900 shadow-lg' : 'bg-transparent'}`}>
         <div className="container mx-auto flex justify-between items-center px-6">
-          <h1 className="text-3xl font-bold text-white">AI Mock Interview </h1>
-          <nav className="flex items-center space-x-6">
+          <h1 className="text-3xl font-bold text-white">AI Mock Interview</h1>
+          <nav className="hidden md:flex items-center space-x-6">
             <NavLink href="#features">Features</NavLink>
             <NavLink href="#testimonials">Testimonials</NavLink>
             <NavLink href="#contact">Contact</NavLink>
@@ -125,7 +131,31 @@ const Page = () => {
               <FaGithub className="w-6 h-6" />
             </a>
           </nav>
+          <button
+            className="md:hidden text-white focus:outline-none"
+            onClick={toggleMenu}
+          >
+            {isMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+          </button>
         </div>
+        {isMenuOpen && (
+          <div className="md:hidden bg-gray-900 py-4">
+            <nav className="flex flex-col items-center space-y-4">
+              <NavLink href="#features" onClick={toggleMenu}>Features</NavLink>
+              <NavLink href="#testimonials" onClick={toggleMenu}>Testimonials</NavLink>
+              <NavLink href="#contact" onClick={toggleMenu}>Contact</NavLink>
+              <a
+                href="https://github.com/ANISHkumarSINHA/IntervieweeSkillAnalysisUsingML/tree/main"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white hover:text-gray-300 transition-colors duration-300"
+                onClick={toggleMenu}
+              >
+                <FaGithub className="w-6 h-6" />
+              </a>
+            </nav>
+          </div>
+        )}
       </header>
 
       <main className="relative">
