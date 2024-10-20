@@ -5,6 +5,7 @@ import { UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { ModeToggle } from "@/components/ModeToggle";
 import Link from "next/link";
+
 const Header = ({ logo }) => {
   const [isUserButtonLoaded, setUserButtonLoaded] = useState(false);
   const [isOpen, setIsOpen] = useState(false)
@@ -33,8 +34,12 @@ const Header = ({ logo }) => {
   return (
     <div className=" bg-secondary shadow-sm ">
       <div className="w-[80%] m-auto flex gap-4 items-center justify-between">
-        <Link className="hidden md:block"  href="/dashboard">
-          <Image src={logo} width={80} height={80} alt="logo" />
+        <Link href="/">
+          <img 
+            src={logo.src} 
+            alt="Logo" 
+            className="cursor-pointer w-24 h-auto"
+          />
         </Link>
         <ul className="hidden md:flex gap-6">
           <Link href="/dashboard">

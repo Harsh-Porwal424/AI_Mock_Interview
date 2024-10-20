@@ -24,7 +24,7 @@ export const UserAnswer = pgTable('userAnswer',{
     createdAt:varchar('createdAt')
 })
 
-/*
+
 export const Newsletter = pgTable('newsletter',{
     id: serial('id').primaryKey(),
     newName: varchar('newName'),
@@ -32,9 +32,9 @@ export const Newsletter = pgTable('newsletter',{
     newMessage: text('newMessage'),
     createdAt: varchar('createdAt')
 })
-*/
 
-/*
+
+
 export const Question = pgTable('question', {
     id: serial('id').primaryKey(),
     MockQuestionJsonResp: text('MockQuestionJsonResp').notNull(),
@@ -47,4 +47,3 @@ export const Question = pgTable('question', {
     createdAt: varchar('createdAt'),
     mockId: varchar('mockId').notNull()
 });
-*/

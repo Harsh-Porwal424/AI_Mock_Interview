@@ -20,6 +20,7 @@ import { useUser } from "@clerk/nextjs";
 import moment from "moment";
 import { Question } from "@/utils/schema";
 import { useRouter } from "next/navigation";
+import { generateQuestions } from "@/utils/geminiAI";
 
 const AddQuestions = () => {
   const [openDailog, setOpenDialog] = useState(false);
@@ -39,14 +40,6 @@ const AddQuestions = () => {
   const onSubmit = async (e) => {
     setLoading(true);
     e.preventDefault();
-    console.log(
-      "Data",
-      jobPosition,
-      jobDesc,
-      typeQuestion,
-      company,
-      jobExperience
-    );
 
     const InputPrompt = `
     Job Positions: ${jobPosition},
@@ -56,21 +49,11 @@ const AddQuestions = () => {
     This company previous question: ${company},
     Based on this information, please provide 5 interview questions with answers in JSON format.
     Each question and answer should be fields in the JSON. Ensure "Question" and "Answer" are fields.
-}  
-  `;
-    console.log("InputPrompt:", InputPrompt);
+    `;
 
     try {
-      const result = await chatSession.sendMessage(InputPrompt);
-      const MockQuestionJsonResp = result.response
-        .text()
-        .replace("```json", "")
-        .replace("```", "")
-        .trim();
-      // console.log("Parsed data", JSON.parse(MockQuestionJsonResp));
-      
+      const MockQuestionJsonResp = await generateQuestions(InputPrompt);
       console.log("JSON RESPONSE", MockQuestionJsonResp);
-      // console.log("Parsed RESPONSE", JSON.parse(MockQuestionJsonResp))
 
       if (MockQuestionJsonResp) {
         const resp = await db
@@ -90,16 +73,17 @@ const AddQuestions = () => {
 
         console.log("Inserted ID:", resp);
 
-        if (resp) {
+        if (resp && resp.length > 0) {
           setOpenDialog(false);
-
           router.push("/dashboard/pyq/" + resp[0]?.mockId);
+        } else {
+          throw new Error("Failed to insert question");
         }
       } else {
-        console.log("ERROR");
+        throw new Error("No response from AI");
       }
     } catch (error) {
-      console.error("Failed to parse JSON:", error.message);
+      console.error("Failed to generate or process questions:", error);
       alert("There was an error processing the data. Please try again.");
     } finally {
       setLoading(false);

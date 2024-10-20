@@ -6,6 +6,7 @@ import { useUser } from "@clerk/nextjs";
 const Upgrade = () => {
   const { user } = useUser();
   return (
+    <>
     <div className="p-5">
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
         <h1 className="text-center font-bold mb-5 text-red-600 text-3xl" >Testing Mode</h1>
@@ -24,7 +25,7 @@ const Upgrade = () => {
                 <p className="mt-2 sm:mt-4">
                   <strong className="text-3xl font-bold text-gray-900 sm:text-4xl">
                     {" "}
-                    {item.price}${" "}
+                    {item.price}₹{" "}
                   </strong>
 
                   <span className="text-sm font-medium text-gray-700">
@@ -127,6 +128,7 @@ const Upgrade = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

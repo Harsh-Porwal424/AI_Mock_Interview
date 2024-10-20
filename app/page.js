@@ -1,126 +1,350 @@
-import React from 'react'
+'use client'
+
+import React, { useEffect, useRef, useState } from 'react'
 import { Button } from "@/components/ui/button"
-import Head from 'next/head';
-import Contect from './_components/Contect';
-import Link from 'next/link';
-import { FaGithub } from "react-icons/fa";
+import Head from 'next/head'
+import Link from 'next/link'
+import { FaGithub } from "react-icons/fa"
+import { motion } from "framer-motion"
+import Image from 'next/image'; // Import Next.js Image component
 
-const page = () => {
+
+
+const ParticleBackground = () => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+
+    const particles = []
+
+    for (let i = 0; i < 100; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 2 + 1,
+        dx: (Math.random() - 0.5) * 0.5,
+        dy: (Math.random() - 0.5) * 0.5,
+      })
+    }
+
+    function animate() {
+      requestAnimationFrame(animate)
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      particles.forEach((particle) => {
+        ctx.beginPath()
+        ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
+        ctx.fill()
+
+        particle.x += particle.dx
+        particle.y += particle.dy
+
+        if (particle.x < 0 || particle.x > canvas.width) particle.dx = -particle.dx
+        if (particle.y < 0 || particle.y > canvas.height) particle.dy = -particle.dy
+      })
+    }
+
+    animate()
+
+    const handleResize = () => {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  return <canvas ref={canvasRef} className="absolute inset-0 z-0" />
+}
+
+const NavLink = ({ href, children }) => {
+  const handleClick = (e) => {
+    e.preventDefault();
+    const target = document.querySelector(href);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
-    // <div className='p-10 flex flex-col items-center justify-center' >
-    //   <h1 className='red font-bold text-[22px]'>Welcome to AI Mock Interview</h1>
-    // <a  ><h1><Button>Start</Button></h1></a>
-    // </div>
+    <a
+      href={href}
+      onClick={handleClick}
+      className="text-lg text-gray-200 mx-2 md:mx-4 hover:text-white transition-colors duration-300"
+    >
+      {children}
+    </a>
+  );
+};
 
-    <div>
+const Page = () => {
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  return (
+    <div className="bg-gradient-to-b from-gray-900 to-gray-800 text-white">
       <Head>
-        <title>AI Mock Interview</title>
+        <title>AI Interview Trainer</title>
         <meta name="description" content="Ace your next interview with AI-powered mock interviews" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="min-h-screen">
-        {/* Header Section */}
-        <header className="w-full py-8 bg-gray-100 shadow-md">
-          <div className="container mx-auto flex flex-col md:flex-row justify-between items-center px-6">
-            <h1 className="text-3xl font-bold text-primary">AI Mock Interview</h1>
-            <nav className="mt-4 md:mt-0 flex items-center">
-              <div  >
-                <a target='_blanck' href={"https://github.com/ANISHkumarSINHA/AI_Mocker"} ><FaGithub className="w-10 h-8"  /></a>
-              </div>
-              <div><a href="#features" className="text-lg text-gray-800 mx-2 md:mx-4">Features</a>
-                <a href="#testimonials" className="text-lg text-gray-800 mx-2 md:mx-4">Testimonials</a>
-                <a href="#contact" className="text-lg text-gray-800 mx-2 md:mx-4">Contact</a></div>
-            </nav>
-          </div>
-        </header>
-
-        {/* Hero Section */}
-        <section className="flex flex-col items-center justify-center text-center py-20 bg-gradient-to-r from-gray-900 to-gray-400  px-6 md:px-0">
-          <h2 className="text-4xl md:text-5xl font-bold text-white">Ace Your Next Interview</h2>
-          <p className="mt-4 text-lg md:text-xl text-white ">Practice with AI-powered mock interviews and get personalized feedback</p>
-          <div className="mt-6 flex flex-col md:flex-row">
+      <header className={`fixed w-full py-4 transition-all duration-300 z-10 ${isScrolled ? 'bg-gray-900 shadow-lg' : 'bg-transparent'}`}>
+        <div className="container mx-auto flex justify-between items-center px-6">
+          <h1 className="text-3xl font-bold text-white">AI Mock Interview </h1>
+          <nav className="flex items-center space-x-6">
+            <NavLink href="#features">Features</NavLink>
+            <NavLink href="#testimonials">Testimonials</NavLink>
+            <NavLink href="#contact">Contact</NavLink>
             <a
-              href="/dashboard"
-              className="px-6 py-3 mb-4 md:mb-0 md:mr-4 text-lg font-semibold bg-white !text-primary-600 rounded-lg shadow-lg hover:bg-gray-100"
+              href="https://github.com/ANISHkumarSINHA/IntervieweeSkillAnalysisUsingML/tree/main"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white hover:text-gray-300 transition-colors duration-300"
             >
-              Get Started
+              <FaGithub className="w-6 h-6" />
             </a>
-            <a
-              href="#features"
-              className="px-6 py-3 text-lg font-semibold border border-white rounded-lg hover:bg-white hover:text-black-600"
+          </nav>
+        </div>
+      </header>
+
+      <main className="relative">
+        <ParticleBackground />
+
+        <section className="relative flex flex-col items-center justify-center min-h-screen text-center py-20 px-6 md:px-0">
+  {/* Background Particle Canvas */}
+  <div className="absolute inset-0 z-0">
+    <canvas id="particles" className="w-full h-full"></canvas>
+  </div>
+
+  {/* Main Content */}
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.8 }}
+    className="z-10"
+  >
+    <h2 className="text-5xl md:text-7xl font-extrabold text-white mb-6 tracking-tight drop-shadow-lg">
+      Ace Your Next Interview
+    </h2>
+
+    <p className="text-xl md:text-2xl text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed">
+      Practice with <span className="text-blue-400 font-semibold">AI-powered mock interviews </span> 
+       and get personalized feedback to land your dream job.
+    </p>
+
+    {/* Button Section */}
+    <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-6">
+  {/* Get Started Button */}
+  <Button
+    asChild
+    className="button-64 relative hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+  >
+    <Link href="/dashboard">
+      <span className="text">Get Started</span>
+    </Link>
+  </Button>
+
+  {/* Learn More Button */}
+  <Button
+    asChild
+    variant="outline"
+    className="button-64 relative border-2 border-teal-300 text-teal-300 shadow-lg hover:bg-teal-300 hover:text-gray-900 transition-all duration-300 rounded-lg"
+  >
+    <a href="#features">
+      <span className="text">Learn More</span>
+    </a>
+  </Button>
+</div>
+  </motion.div>
+</section>
+
+        <section id="features" className="py-20 bg-gray-800">
+          <div className="container mx-auto text-center px-6 md:px-0">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
             >
-              Learn More
-            </a>
+              <h2 className="text-4xl font-bold text-white mb-8">Features</h2>
+              <p className="text-xl text-gray-300 mb-12">
+                Our AI Mock Interview platform offers a range of powerful features:
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {[
+                  {
+                    title: "AI Mock Interviews",
+                    description: "Experience realistic interview scenarios with our advanced AI.",
+                    icon: "🤖",
+                  },
+                  {
+                    title: "Instant Feedback",
+                    description: "Get instant, personalized feedback to improve your performance.",
+                    icon: "📊",
+                  },
+                  {
+                    title: "Comprehensive Reports",
+                    description: "Receive detailed reports highlighting your strengths and weaknesses.",
+                    icon: "📝",
+                  },
+                ].map((feature, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                    className="bg-gray-700 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                  >
+                    <div className="text-4xl mb-4">{feature.icon}</div>
+                    <h3 className="text-2xl font-semibold text-white mb-4">{feature.title}</h3>
+                    <p className="text-gray-300">{feature.description}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
           </div>
         </section>
 
-        {/* Features Section */}
-        <section id="features" className="py-16 bg-white px-6 md:px-0">
-          <div className="container mx-auto text-center">
-            <h2 className="text-4xl font-bold text-gray-800">Features</h2>
-            <p className="mt-4 text-lg text-gray-800">
-              Our AI Mock Interview platform offers a range of powerful features:
-            </p>
-            <div className="flex flex-wrap justify-center mt-8">
-              <div className="w-full md:w-1/3 px-4 py-8">
-                <div className="bg-blue-100 rounded-lg p-6 shadow-md">
-                  <h3 className="text-2xl font-semibold text-black-600">AI Mock Interviews</h3>
-                  <p className="mt-2 text-gray-600">Experience realistic interview scenarios with our advanced AI.</p>
-                </div>
+        <section id="testimonials" className="py-20 bg-gray-900">
+          <div className="container mx-auto text-center px-6 md:px-0">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-4xl font-bold text-white mb-12">What Our Users Say</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {[
+                  {
+                    quote: "The AI mock interviews were incredibly helpful. I felt much more confident going into my real interview.",
+                    author: "Rohan Agarwal",
+                  },
+                  {
+                    quote: "The feedback was spot on and helped me improve my answers. Highly recommend this service!",
+                    author: "Harsh Pandey",
+                  },
+                ].map((testimonial, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                    className="bg-gray-800 rounded-lg p-6 shadow-lg"
+                  >
+                    <p className="text-gray-300 mb-4 italic">"{testimonial.quote}"</p>
+                    <p className="text-blue-400 font-semibold">- {testimonial.author}</p>
+                  </motion.div>
+                ))}
               </div>
-              <div className="w-full md:w-1/3 px-4 py-8">
-                <div className="bg-blue-100 rounded-lg p-6 shadow-md">
-                  <h3 className="text-2xl font-semibold text-black-600">Instant Feedback</h3>
-                  <p className="mt-2 text-gray-600">Get instant, personalized feedback to improve your performance.</p>
-                </div>
-              </div>
-              <div className="w-full md:w-1/3 px-4 py-8">
-                <div className="bg-blue-100 rounded-lg p-6 shadow-md">
-                  <h3 className="text-2xl font-semibold text-black-600">Comprehensive Reports</h3>
-                  <p className="mt-2 text-gray-600">Receive detailed reports highlighting your strengths and weaknesses.</p>
-                </div>
-              </div>
-            </div>
+            </motion.div>
           </div>
         </section>
 
-        {/* Testimonials Section */}
-        <section id="testimonials" className="py-16 bg-gray-50 px-6 md:px-0">
-          <div className="container mx-auto text-center">
-            <h2 className="text-4xl font-bold text-gray-800">What Our Users Say</h2>
-            <div className="flex flex-wrap justify-center mt-8">
-              <div className="w-full md:w-1/2 px-4 py-8">
-                <div className="bg-white rounded-lg p-6 shadow-md">
-                  <p className="text-gray-600">
-                    "The AI mock interviews were incredibly helpful. I felt much more confident going into my real interview."
-                  </p>
-                  <h4 className="mt-4 text-lg font-semibold text-blue-600">- Harshit Aggarwal</h4>
-                </div>
+          
+        <section id="team" className="py-20 bg-gray-800">
+          <div className="container mx-auto text-center px-6 md:px-0">
+            <motion.div
+              initial={{ opacity: 20, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-4xl font-bold text-white mb-12">Meet our Team</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+                {[
+                  { name: "Harsh Porwal", image: "/har.png" },
+                  { name: "Anish Sinha", image: "/ani.jpeg" },
+                  { name: "Yogant Sahu", image: "/yog.jpeg" },
+                  { name: "Vishwas Mishra", image: "/vis.jpeg" },
+                  { name: "Somdatta Pradhan", image: "/som.jpeg" },
+                  { name: "Ankur Suman", image: "/ank.jpeg" },
+                ].map((member, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                    className="flex flex-col items-center"
+                  >
+                    <div className="w-32 h-32 mb-4 overflow-hidden rounded-full bg-gray-700">
+                      <Image
+                        src={member.image}
+                        alt={`${member.name}'s profile`}
+                        width={128}
+                        height={128}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                    <h3 className="text-xl font-semibold text-white">{member.name}</h3>
+                  </motion.div>
+                ))}
               </div>
-              <div className="w-full md:w-1/2 px-4 py-8">
-                <div className="bg-white rounded-lg p-6 shadow-md">
-                  <p className="text-gray-600">
-                    "The feedback was spot on and helped me improve my answers. Highly recommend this service!"
-                  </p>
-                  <h4 className="mt-4 text-lg font-semibold text-blue-600">- Harsh Pandey</h4>
-                </div>
-              </div>
-            </div>
+            </motion.div>
           </div>
         </section>
+        
 
-        {/* Contact Section */}
-        <section id="contact" className="py-16 bg-white px-6 md:px-0">
-          <Contect />
+        <section id="contact" className="py-20 bg-gray-900">
+          <div className="container mx-auto px-6 md:px-0">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-4xl font-bold text-white text-center mb-12">Get in Touch</h2>
+              <form className="max-w-lg mx-auto">
+                <div className="mb-6">
+                  <label htmlFor="name" className="block text-gray-300 mb-2">Name</label>
+                  <input type="text" id="name" className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div className="mb-6">
+                  <label htmlFor="email" className="block text-gray-300 mb-2">Email</label>
+                  <input type="email" id="email" className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div className="mb-6">
+                  <label htmlFor="message" className="block text-gray-300 mb-2">Message</label>
+                  <textarea id="message" rows={4} className="w-full px-4 py-2 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300">
+                  Send Message
+                </Button>
+              </form>
+            </motion.div>
+          </div>
         </section>
       </main>
 
-      <footer className="py-8 bg-black text-white text-center">
-        <p>© 2024 Crack My Interview. All rights reserved to Anish Sinha.</p>
+      <footer className="py-8 bg-gray-800 text-gray-400 text-center">
+        <p>© {new Date().getFullYear()} AI Mock Interview. All rights reserved to Team Interviewee Skill Analysis Using ML</p>
       </footer>
     </div>
   )
 }
 
-export default page
+export default Page
