@@ -32,21 +32,50 @@ const Page = ({ params }) => {
       
       if (result && result.length > 0) {
         const rawData = result[0].MockQuestionJsonResp;
-        // Remove any markdown formatting if present
-        const cleanedData = rawData.replace(/```json\n|\n```/g, '').trim();
-        // Find the first occurrence of '{' and the last occurrence of '}'
-        const startIndex = cleanedData.indexOf('{');
-        const endIndex = cleanedData.lastIndexOf('}');
-        if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
-          const jsonString = cleanedData.slice(startIndex, endIndex + 1);
-          const parsedQuestionData = JSON.parse(jsonString);
-          setQuestionData(parsedQuestionData);
-          console.log("Parsed Question Data:", parsedQuestionData); // Log the parsed data
-        } else {
-          throw new Error("Invalid JSON structure");
+        
+        // Basic string cleanup
+        let cleanedData = rawData
+          .replace(/```json\s*/g, '')
+          .replace(/```\s*/g, '')
+          .replace(/\n/g, ' ')
+          .replace(/\r/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        // Fix quotes and special characters
+        cleanedData = cleanedData
+          .replace(/(?<=:\s*)"([^"]*)"([^"]*)"([^"]*)"(?=\s*[,}])/g, '"$1\'$2\'$3"')
+          .replace(/(?<=:\s*)"([^"]*),\s*including:\s*([^"]*)"(?=\s*[,}])/g, '"$1 including $2"')
+          .replace(/•/g, '-');
+
+        try {
+          const parsedData = JSON.parse(cleanedData);
+          
+          if (parsedData.questions) {
+            setQuestionData(parsedData.questions);
+          } else if (Array.isArray(parsedData)) {
+            setQuestionData(parsedData);
+          } else {
+            setQuestionData([parsedData]);
+          }
+        } catch (error) {
+          // If parsing fails, try one more time with more aggressive cleaning
+          cleanedData = cleanedData
+            .replace(/[^\x20-\x7E]/g, '')  // Remove all non-printable characters
+            .replace(/,(\s*[}\]])/g, '$1')  // Remove trailing commas
+            .replace(/:\s*"([^"]*)"(\s*[,}])/g, ':"$1"$2');  // Fix quote escaping
+
+          const parsedData = JSON.parse(cleanedData);
+          if (parsedData.questions) {
+            setQuestionData(parsedData.questions);
+          } else if (Array.isArray(parsedData)) {
+            setQuestionData(parsedData);
+          } else {
+            setQuestionData([parsedData]);
+          }
         }
       } else {
-        console.error("No question data found");
+        throw new Error("No question data found");
       }
     } catch (error) {
       console.error("Error fetching or parsing question data:", error);
@@ -62,7 +91,11 @@ const Page = ({ params }) => {
   };
 
   const renderQuestions = () => {
-    if (!questionData || !questionData.questions) return null;
+    if (!questionData) return null;
+
+    const questions = Array.isArray(questionData) 
+      ? questionData 
+      : [questionData];
 
     return (
       <motion.div
@@ -79,31 +112,42 @@ const Page = ({ params }) => {
         </div>
         <div ref={targetRef}>
           {isPdfMode ? (
-            // Render all questions and answers without Accordion when in PDF mode
+            // PDF Mode - Show all content without Accordion
             <div className="space-y-4">
-              {questionData.questions.map((item, index) => (
+              {questions.map((item, index) => (
                 <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden p-6">
-                  <h2 className="text-lg font-medium text-gray-700 mb-2">{item.Question || `Question ${index + 1}`}</h2>
-                  <p className="text-gray-600">{item.Answer || "No answer provided"}</p>
+                  <div className="text-lg font-medium mb-4">
+                    {item.Question || `Question ${index + 1}`}
+                  </div>
+                  <div className="prose max-w-none">
+                    {item.Answer || "No answer provided"}
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            // Render Accordion for normal view
+            // Normal Mode - Show Accordion
             <Accordion type="single" collapsible className="space-y-4">
-              {questionData.questions.map((item, index) => (
+              {questions.map((item, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <AccordionItem value={`item-${index + 1}`} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1">
-                    <AccordionTrigger className="px-6 py-4 hover:bg-gray-50 transition-colors duration-200">
-                      <span className="text-lg font-medium text-gray-700">{item.Question || `Question ${index + 1}`}</span>
+                  <AccordionItem 
+                    value={`item-${index + 1}`} 
+                    className="bg-white rounded-lg shadow-md overflow-hidden"
+                  >
+                    <AccordionTrigger className="px-6 py-4">
+                      <span className="text-lg font-medium">
+                        {item.Question || `Question ${index + 1}`}
+                      </span>
                     </AccordionTrigger>
-                    <AccordionContent className="px-6 py-4 bg-gray-50">
-                      <p className="text-gray-600">{item.Answer || "No answer provided"}</p>
+                    <AccordionContent className="px-6 py-4">
+                      <div className="prose max-w-none">
+                        {item.Answer || "No answer provided"}
+                      </div>
                     </AccordionContent>
                   </AccordionItem>
                 </motion.div>

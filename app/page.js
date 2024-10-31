@@ -312,7 +312,6 @@ const Page = () => {
                   { name: "Vishwas Mishra", image: "/vis.jpeg" },
                   { name: "Somdatta Pradhan", image: "/som.jpeg" },
                   { name: "Ankur Suman", image: "/ank.jpeg" },
-                  { name: "Arvasu Gupta", image: "/ars.jpeg" },
 
                 ].map((member, index) => (
                   <motion.div
