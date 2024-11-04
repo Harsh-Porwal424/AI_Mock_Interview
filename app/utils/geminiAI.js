@@ -10,12 +10,18 @@ export const generateQuestions = async (prompt) => {
       .replace(/```\s*/g, '')
       .trim();
 
-    // Ensure the response is a valid JSON array
-    if (!response.startsWith('{') && !response.startsWith('[')) {
+    // Ensure the response is a valid JSON object
+    if (!response.startsWith('{')) {
       throw new Error('Invalid JSON format');
     }
 
-    return response;
+    // Parse the response
+    const parsedResponse = JSON.parse(response);
+    
+    // Convert the object to an array
+    const questionsArray = Object.values(parsedResponse);
+    
+    return questionsArray; // Return the array of questions
   } catch (error) {
     console.error("Error generating questions:", error);
     throw error;

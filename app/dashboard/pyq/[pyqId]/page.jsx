@@ -9,6 +9,7 @@ import {
 import { db } from "@/utils/db";
 import { Question } from "@/utils/schema";
 import { eq } from "drizzle-orm";
+import { generateQuestions } from "@/utils/geminiAI"; // Import the generateQuestions function
 
 const Page = ({ params }) => {
   const [questionData, setQuestionData] = useState();
@@ -27,15 +28,16 @@ const Page = ({ params }) => {
       
       if (result && result.length > 0) {
         const rawData = result[0].MockQuestionJsonResp;
-        
+
         // First, try parsing directly
         try {
           const directParse = JSON.parse(rawData);
-          if (directParse.questions) {
-            setQuestionData(directParse.questions);
-            return;
-          } else if (Array.isArray(directParse)) {
+          if (Array.isArray(directParse)) {
             setQuestionData(directParse);
+            return;
+          } else {
+            // If it's an object, convert it to an array
+            setQuestionData(Object.values(directParse));
             return;
           }
         } catch (directError) {
@@ -61,14 +63,17 @@ const Page = ({ params }) => {
           cleanedData = cleanedData.substring(0, lastValid + 1);
         }
 
-        const parsedData = JSON.parse(cleanedData);
-        
-        if (parsedData.questions) {
-          setQuestionData(parsedData.questions);
-        } else if (Array.isArray(parsedData)) {
-          setQuestionData(parsedData);
-        } else {
-          setQuestionData([parsedData]);
+        // Attempt to parse the cleaned data
+        try {
+          const parsedData = JSON.parse(cleanedData);
+          if (Array.isArray(parsedData)) {
+            setQuestionData(parsedData);
+          } else {
+            setQuestionData(Object.values(parsedData)); // Convert to array if it's an object
+          }
+        } catch (cleanupError) {
+          console.error("Error parsing cleaned data:", cleanupError);
+          console.log("Cleaned data:", cleanedData);
         }
       }
     } catch (error) {
