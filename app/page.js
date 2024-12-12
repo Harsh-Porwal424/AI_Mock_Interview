@@ -123,7 +123,7 @@ const Page = () => {
             <NavLink href="#testimonials">Testimonials</NavLink>
             <NavLink href="#contact">Contact</NavLink>
             <a
-              href="https://github.com/ANISHkumarSINHA/IntervieweeSkillAnalysisUsingML/tree/main"
+              href="https://github.com/Harsh-Porwal424/AI_Mock_Interview"
               target="_blank"
               rel="noopener noreferrer"
               className="text-white hover:text-gray-300 transition-colors duration-300"
@@ -145,7 +145,7 @@ const Page = () => {
               <NavLink href="#testimonials" onClick={toggleMenu}>Testimonials</NavLink>
               <NavLink href="#contact" onClick={toggleMenu}>Contact</NavLink>
               <a
-                href="https://github.com/ANISHkumarSINHA/IntervieweeSkillAnalysisUsingML/tree/main"
+                href="https://github.com/Harsh-Porwal424/AI_Mock_Interview"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white hover:text-gray-300 transition-colors duration-300"
